@@ -1,0 +1,25 @@
+### get all persons
+GET http://localhost:3001/api/persons/
+
+### get single person
+GET http://localhost:3001/api/persons/3
+
+### delete single person
+DELETE  http://localhost:3001/api/persons/4
+
+### add single person success
+POST http://localhost:3001/api/persons/
+content-type: application/json
+
+{
+    "name": "Jon Snow",
+    "number": "0362-2340-63262"
+}
+
+### add single person refuse because of missing field
+POST http://localhost:3001/api/persons/
+content-type: application/json
+
+{
+    "name": "Jon Snow"
+}
