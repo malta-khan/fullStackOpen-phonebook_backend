@@ -9,14 +9,7 @@ app.use(cors())
 app.use(express.json())
 morgan.token('jsonData', (req, res)=>{ return JSON.stringify(req.body)})
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :jsonData"))
-
-app.get("/",(request, response)=>{
-    let html = `
-    <div>Nothing much on this page, here are some links to other pages</div>
-    <div><a href="/info">/info</a></div>
-    <div><a href="/api/persons">/api/persons</a></div>`
-    response.send(html)
-})
+app.use(express.static('frontend'))
 
 app.get("/api/persons",(request, response)=>{
     response.send(data)
