@@ -4,57 +4,72 @@ const morgan = require("morgan")
 const uniqid = require("uniqid")
 const app = express()
 const cors = require('cors')
+const PORT = process.env.PORT || 3001
+const mongoose = require('mongoose')
+const Person = require("./models/person")
+mongoose.set('strictQuery', false)
+const url = process.env.MONGODB_URI
 
 app.use(cors())
 app.use(express.json())
-morgan.token('jsonData', (req, res)=>{ return JSON.stringify(req.body)})
-app.use(morgan(":method :url :status :res[content-length] - :response-time ms :jsonData"))
 app.use(express.static('frontend'))
 
+morgan.token('jsonData', (req, res)=>{ return JSON.stringify(req.body)})
+app.use(morgan(":method :url :status :res[content-length] - :response-time ms :jsonData"))
+
+
 app.get("/api/persons",(request, response)=>{
-    response.send(data)
+    Person.find().then((result)=>{
+        response.send(result);
+    })
 })
 
 app.post("/api/persons",(request, response)=>{
-    let newPerson = {...request.body};
-    let duplicate = data.find(person => person.name === newPerson.name);
-    if(duplicate){
-        response.status(400).end(`${newPerson.name} is already added to the phonebook.`)
-    }else if(!newPerson.name || !newPerson.number){
+    let newPerson = new Person({...request.body});
+    if(!newPerson.name || !newPerson.number){
         response.status(400).end("Missing name or number")
     }else{
-        newPerson.id = uniqid()
-        data = data.concat(newPerson)
-        response.send(newPerson)
+        newPerson.save().then((result)=>{
+            console.log(result)
+            response.send(result)
+        })
     }
 })
 
 app.get("/api/persons/:id",(request, response)=>{
     let {id} = request.params;
-    let person = data.find(person=> person.id.toString() === id.toString())
-    if(person){
-        response.send(person)
-    }else{
-        response.statusMessage = "Invalid ID";
-        response.status(404).end("404 Invalid ID")
-    }
+    Person.findById(id).then((result)=>{
+        if(result){
+            response.send(result)
+        }else{
+            response.status(404).end("404 Invalid ID")
+        }
+    })
+    .catch(err=>{
+        console.log(err)
+        response.status(400).send({ error: 'malformatted id' })
+    })
 })
 
 app.delete("/api/persons/:id",(request, response)=>{
     let {id} = request.params;
-    data = data.filter(person=> person.id.toString() !== id.toString())
-    response.status(204).end()
+    Person.deleteOne({ _id: id}).then(()=>{
+        response.status(204).end()
+    })
 })
 
 app.get("/info",(request, response)=>{
+    Person.find().then(result=>{    
     let date = new Date()
     let html = `
-    <div>Phonebook has info for ${data.length} people.</div>
-    <div>${date}</div>`
-    response.send(html)
+        <div>Phonebook has info for ${result.length} people.</div>
+        <div>${date}</div>`
+        response.send(html)
+    })
 })
 
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}/`)
+mongoose.connect(url).then(()=>{
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}/`)
+    })
 })
