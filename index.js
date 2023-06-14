@@ -36,7 +36,7 @@ app.post("/api/persons",(request, response)=>{
     }
 })
 
-app.get("/api/persons/:id",(request, response)=>{
+app.get("/api/persons/:id",(request, response, next)=>{
     let {id} = request.params;
     Person.findById(id).then((result)=>{
         if(result){
@@ -45,12 +45,14 @@ app.get("/api/persons/:id",(request, response)=>{
             response.status(404).end("404 Invalid ID")
         }
     })
-    .catch(err=>{
-        console.log(err)
-        response.status(400).send({ error: 'malformatted id' })
-    })
+    .catch(err=>next(err))
 })
 
+app.put("/api/persons/:id",(request, response)=>{
+    let {id} = request.params;
+    Person.findByIdAndUpdate(id, request.body, {new:true})
+    .then((result)=>response.send(result))
+})
 app.delete("/api/persons/:id",(request, response)=>{
     let {id} = request.params;
     Person.deleteOne({ _id: id}).then(()=>{
@@ -67,6 +69,15 @@ app.get("/info",(request, response)=>{
         response.send(html)
     })
 })
+
+function errorHandler(err,req,res,next){
+    if (err.name === "CastError"){
+        res.status(400).send("Invalid ID format")
+    } else {
+        next(err)
+    }
+}
+app.use(errorHandler)
 
 mongoose.connect(url).then(()=>{
     app.listen(PORT, () => {
