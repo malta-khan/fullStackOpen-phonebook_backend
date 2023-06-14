@@ -1,4 +1,3 @@
-let data = require("./data.json")
 const express = require("express")
 const morgan = require("morgan")
 const uniqid = require("uniqid")
@@ -30,7 +29,6 @@ app.post("/api/persons",(request, response)=>{
         response.status(400).end("Missing name or number")
     }else{
         newPerson.save().then((result)=>{
-            console.log(result)
             response.send(result)
         })
     }
