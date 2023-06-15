@@ -1,8 +1,20 @@
  const mongoose = require("mongoose")
  mongoose.pluralize(null);
  const personSchema = new mongoose.Schema({
-    name: String,
-    number: String
+    name: {
+      type: String,
+      required: true,
+      minLength: 3,
+    },
+    number: {
+      type: String,
+      validate: {
+        validator: (v) => {
+          return /^\d{2,3}-\d{6,}$/.test(v);
+        },
+        message: "Invalid phone number format."
+      }
+    }
  })
  personSchema.set('toJSON', {
    transform: (document, returnedObject) => {
