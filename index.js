@@ -15,8 +15,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('frontend'));
 
-morgan.token('jsonData', (request) => JSON.stringify(request.body));
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :jsonData'));
+morgan.token('"jsonData"', (request) => JSON.stringify(request.body));
+app.use(
+  morgan(
+    ':method :url :status :res[content-length] - :response-time ms :jsonData',
+  ),
+);
 
 app.get('/api/persons', (request, response) => {
   Person.find().then((result) => {
@@ -26,7 +30,8 @@ app.get('/api/persons', (request, response) => {
 
 app.post('/api/persons', (request, response, next) => {
   const newPerson = new Person({ ...request.body });
-  newPerson.save()
+  newPerson
+    .save()
     .then((result) => {
       response.send(result);
     })
@@ -37,13 +42,14 @@ app.post('/api/persons', (request, response, next) => {
 
 app.get('/api/persons/:id', (request, response, next) => {
   const { id } = request.params;
-  Person.findById(id).then((result) => {
-    if (result) {
-      response.send(result);
-    } else {
-      response.status(404).end('404 Invalid ID');
-    }
-  })
+  Person.findById(id)
+    .then((result) => {
+      if (result) {
+        response.send(result);
+      } else {
+        response.status(404).end('404 Invalid ID');
+      }
+    })
     .catch((err) => next(err));
 });
 
@@ -61,7 +67,9 @@ app.delete('/api/persons/:id', (request, response) => {
     if (result.deletedCount === 1) {
       return response.status(204).end();
     }
-    return response.status(400).send('contact does not exsist or already deleted.');
+    return response
+      .status(400)
+      .send('contact does not exsist or already deleted.');
   });
 });
 
@@ -78,7 +86,8 @@ app.get('/info', (request, response) => {
 function errorHandler(err, req, res, next) {
   if (err.name === 'CastError') {
     return res.status(400).send('Invalid ID format');
-  } if (err.name === 'ValidationError') {
+  }
+  if (err.name === 'ValidationError') {
     return res.status(400).json({ error: err.message });
   }
   return next(err);
