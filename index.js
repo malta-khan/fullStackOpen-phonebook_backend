@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('frontend'));
 
-morgan.token('"jsonData"', (request) => JSON.stringify(request.body));
+morgan.token('jsonData', (request) => JSON.stringify(request.body));
 app.use(
   morgan(
     ':method :url :status :res[content-length] - :response-time ms :jsonData',
@@ -56,21 +56,24 @@ app.get('/api/persons/:id', (request, response, next) => {
 app.put('/api/persons/:id', (request, response, next) => {
   const { id } = request.params;
   Person.findByIdAndUpdate(id, request.body, { new: true, runValidators: true })
-    .then((result) => response.send(result))
+    .then((result) => {
+      if (result) {
+        return response.send(result);
+      }
+      return response
+        .status(400)
+        .send({
+          error:
+            'contact does not exsist or already deleted. Refresh Page and try again',
+        });
+    })
     .catch((error) => {
       next(error);
     });
 });
 app.delete('/api/persons/:id', (request, response) => {
   const { id } = request.params;
-  Person.deleteOne({ _id: id }).then((result) => {
-    if (result.deletedCount === 1) {
-      return response.status(204).end();
-    }
-    return response
-      .status(400)
-      .send('contact does not exsist or already deleted.');
-  });
+  Person.deleteOne({ _id: id }).then(() => response.status(204).end());
 });
 
 app.get('/info', (request, response) => {
